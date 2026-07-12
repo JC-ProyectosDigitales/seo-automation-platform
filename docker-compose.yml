@@ -1,0 +1,14 @@
+services:
+
+  api-gateway:
+
+    build:
+      ./api-gateway
+
+    container_name: seo-api-gateway
+
+    ports:
+      - "5000:5000"
+
+    env_file:
+      - .env
