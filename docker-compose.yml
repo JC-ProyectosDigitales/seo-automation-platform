@@ -3,7 +3,8 @@ services:
   api-gateway:
 
     build:
-      ./api-gateway
+      context: .
+      dockerfile: api-gateway/Dockerfile
 
     container_name: seo-api-gateway
 
@@ -12,3 +13,72 @@ services:
 
     env_file:
       - .env
+
+    depends_on:
+      - seo-content
+      - seo-onpage
+      - seo-technical
+
+
+  seo-content:
+
+    build:
+      context: ./services/seo-content
+
+    container_name: seo-content-service
+
+    ports:
+      - "5003:5003"
+
+    env_file:
+      - .env
+
+
+  seo-onpage:
+
+    build:
+      context: ./services/seo-onpage
+
+    container_name: seo-onpage-service
+
+    ports:
+      - "5004:5004"
+
+    env_file:
+      - .env
+
+
+  seo-technical:
+
+    build:
+      context: ./services/seo-technical
+
+    container_name: seo-technical-service
+
+    ports:
+      - "5005:5005"
+
+    env_file:
+      - .env
+
+  
+  postgres:
+
+    image: postgres:16
+
+    container_name: seo-postgres
+
+    environment:
+      POSTGRES_USER: seo_user
+      POSTGRES_PASSWORD: seo_password
+      POSTGRES_DB: seo_database
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+
+  postgres_data:

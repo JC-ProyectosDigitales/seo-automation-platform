@@ -1,6 +1,15 @@
 from fastapi import FastAPI
 
 from app.routes.audit import router as audit_router
+from app.routes.audits import router as audits_router
+
+from app.database.connection import Base, engine
+from app.database import models
+
+
+Base.metadata.create_all(
+    bind=engine
+)
 
 
 app = FastAPI(
@@ -14,14 +23,18 @@ app.include_router(
     prefix="/api"
 )
 
+app.include_router(
+    audits_router,
+    prefix="/api"
+)
 
 @app.get("/")
 async def root():
 
     return {
 
-        "service":"api-gateway",
+        "service": "api-gateway",
 
-        "status":"running"
+        "status": "running"
 
     }

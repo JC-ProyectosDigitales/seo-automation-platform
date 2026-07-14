@@ -1,0 +1,21 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Tests
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# Docker
+*.log
+
+# IDE
+.vscode/
+.idea/

@@ -1,30 +1,40 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from app.schemas.audit_schema import AuditRequest
+from sqlalchemy.orm import Session
+
+from shared.contracts import AuditRequest
 
 from app.services.audit_service import create_audit
+
+from app.database.session import get_db
 
 
 router = APIRouter()
 
 
 @router.post("/audit")
-async def create(request: AuditRequest):
+async def create(
+    request: AuditRequest,
+    db: Session = Depends(get_db)
+):
 
 
-    audit = create_audit(request)
+    audit = await create_audit(
+        request,
+        db
+    )
 
 
     return {
 
-        "success":True,
+        "success": True,
 
-        "module":"api-gateway",
+        "module": "api-gateway",
 
-        "audit_id":audit["audit_id"],
+        "audit_id": audit["audit_id"],
 
-        "data":audit,
+        "data": audit,
 
-        "errors":[]
+        "errors": []
 
     }
