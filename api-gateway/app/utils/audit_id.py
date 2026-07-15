@@ -3,6 +3,6 @@ from datetime import datetime
 
 def generate_audit_id():
 
-    date = datetime.now().strftime("%Y%m%d")
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
 
-    return f"AUD-{date}-001"
+    return f"AUD-{timestamp}"
