@@ -1,8 +1,7 @@
 import os
 
 from app.utils.audit_id import generate_audit_id
-from app.services.module_client import send_request
-from app.services.modules import MODULES
+from app.services.orchestrator import run_audit
 
 from app.database.models import Audit
 
@@ -23,17 +22,7 @@ async def create_audit(data, db):
     }
 
 
-    results = {}
-
-
-    for module, url in MODULES.items():
-
-        response = await send_request(
-            url,
-            audit
-        )
-
-        results[module] = response
+    results = await run_audit(audit)
 
 
 
