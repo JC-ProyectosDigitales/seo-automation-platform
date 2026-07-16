@@ -1,17 +1,25 @@
 import os
 
+from dotenv import load_dotenv
 
-MODULES = {
 
-    "seo-content": os.getenv(
-        "SEO_CONTENT_URL"
-    ),
+load_dotenv()
 
-    "seo-onpage": os.getenv(
-        "SEO_ONPAGE_URL"
-    ),
 
-    "seo-technical": os.getenv(
-        "SEO_TECHNICAL_URL"
-    )
-}
+def get_modules():
+
+    modules = {}
+
+    for key, value in os.environ.items():
+
+        if key.startswith("SEO_"):
+
+            module_name = (
+                key.replace("SEO_", "")
+                .lower()
+                .replace("_", "-")
+            )
+
+            modules[module_name] = value
+
+    return modules

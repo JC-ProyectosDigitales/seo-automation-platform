@@ -1,18 +1,46 @@
+from sqlalchemy.orm import Session
+
 from app.services.module_client import send_request
-from app.services.modules import MODULES
+from app.services.module_service import get_active_modules
 
 
-async def run_audit(audit):
+
+async def run_audit(
+    audit,
+    db: Session
+):
 
     results = {}
 
-    for module, url in MODULES.items():
+
+    modules = get_active_modules(
+        db
+    )
+
+
+    for module in modules:
+
 
         response = await send_request(
-            url,
-            audit
+
+            module["url"],
+
+            audit,
+
+            module["timeout"]
+
         )
 
-        results[module] = response
+
+        results[module["name"]] = {
+
+            "priority": module["priority"],
+
+            "timeout": module["timeout"],
+
+            "result": response
+
+        }
+
 
     return results

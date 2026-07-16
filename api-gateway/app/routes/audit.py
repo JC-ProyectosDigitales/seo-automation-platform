@@ -1,26 +1,36 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 
 from sqlalchemy.orm import Session
 
 from shared.contracts import AuditRequest
 
-from app.services.audit_service import create_audit
-
 from app.database.session import get_db
+
+from app.services.audit_service import create_audit
+from app.services.audit_worker import execute_audit
 
 
 router = APIRouter()
 
 
+
 @router.post("/audit")
 async def create(
     request: AuditRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
 
 
     audit = await create_audit(
         request,
+        db
+    )
+
+
+    background_tasks.add_task(
+        execute_audit,
+        audit["audit"],
         db
     )
 
@@ -33,7 +43,13 @@ async def create(
 
         "audit_id": audit["audit_id"],
 
-        "data": audit,
+        "data": {
+
+            "audit_id": audit["audit_id"],
+
+            "status": audit["status"]
+
+        },
 
         "errors": []
 

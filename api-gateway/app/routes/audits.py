@@ -9,6 +9,44 @@ from app.database.models import Audit
 router = APIRouter()
 
 
+@router.get("/audits")
+def get_audits(
+    db: Session = Depends(get_db)
+):
+
+    audits = (
+        db.query(Audit)
+        .order_by(
+            Audit.created_at.desc()
+        )
+        .all()
+    )
+
+
+    return {
+
+        "success": True,
+
+        "total": len(audits),
+
+        "audits": [
+
+            {
+                "audit_id": audit.audit_id,
+                "website": audit.website,
+                "keyword": audit.keyword,
+                "status": audit.status,
+                "created_at": audit.created_at
+            }
+
+            for audit in audits
+
+        ]
+
+    }
+
+
+
 @router.get("/audits/{audit_id}")
 def get_audit(
     audit_id: str,
@@ -33,10 +71,19 @@ def get_audit(
 
 
     return {
+
+        "success": True,
+
         "audit_id": audit.audit_id,
+
         "website": audit.website,
+
         "keyword": audit.keyword,
+
         "status": audit.status,
+
         "results": audit.results,
+
         "created_at": audit.created_at
+
     }

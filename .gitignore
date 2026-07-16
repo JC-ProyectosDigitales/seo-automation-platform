@@ -1,21 +1,44 @@
-# Environment
-.env
-
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
-
-# Tests
-.pytest_cache/
+*.pyd
 
 # Virtual environments
 venv/
+.env/
 .venv/
 
-# Docker
+# Environment files
+.env
+*.env
+
+# FastAPI
 *.log
+
+# Node
+node_modules/
+dist/
+build/
+
+# Vite
+.vite/
+
+# Docker
+*.pid
+
+# Database
+*.sqlite
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
+
+# Temporary files
+*.tmp
+*.temp
