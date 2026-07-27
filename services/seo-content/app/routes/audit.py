@@ -1,30 +1,46 @@
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+from modules.audit_service import execute as execute_audit
+from modules.web_scraper import extract_content
 
 
 router = APIRouter()
 
 
+class AuditRequest(BaseModel):
+    audit_id: str
+    website: str
+    keyword: str
+
+
 @router.post("/audit")
-async def audit_content(data: dict):
+def audit_content(data: AuditRequest):
 
-    return {
+    try:
 
-        "success": True,
+        content = extract_content(data.website)
 
-        "module": "seo-content",
+        result = execute_audit(
+            data.audit_id,
+            data.keyword,
+            content
+        )
 
-        "audit_id": data.get("audit_id"),
+        return result
 
-        "data": {
+    except Exception as error:
 
-            "message": "SEO Content service received audit",
-
-            "keyword": data.get("keyword"),
-
-            "website": data.get("website")
-
-        },
-
-        "errors": []
-
-    }
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "module": "seo-content",
+                "audit_id": data.audit_id,
+                "status": "error",
+                "errors": [
+                    str(error)
+                ]
+            }
+        )
