@@ -40,6 +40,14 @@ DEFAULT_MODULES = [
         "priority": 30,
         "timeout": 30,
     },
+    {
+        "name": "seo-monitor",
+        "url": "http://seo-monitor:5006/audit",
+        "description": "Monitoreo de disponibilidad y estado del sitio web",
+        "active": True,
+        "priority": 40,
+        "timeout": 30
+    },
 ]
 
 

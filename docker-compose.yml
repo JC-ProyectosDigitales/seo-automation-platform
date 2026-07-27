@@ -16,6 +16,7 @@ services:
       - seo-content
       - seo-onpage
       - seo-technical
+      - seo-monitor
 
     networks:
       - seo-network
@@ -67,6 +68,24 @@ services:
 
     ports:
       - "5105:5005"
+
+    env_file:
+      - .env
+
+    networks:
+      - seo-network
+
+    restart: unless-stopped
+
+
+  seo-monitor:
+    build:
+      context: ./services/seo-monitor
+
+    container_name: seo-monitor-service
+
+    ports:
+      - "5106:5006"
 
     env_file:
       - .env
