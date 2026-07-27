@@ -1,7 +1,5 @@
 services:
-
   api-gateway:
-
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
@@ -19,9 +17,13 @@ services:
       - seo-onpage
       - seo-technical
 
+    networks:
+      - seo-network
+
+    restart: unless-stopped
+
 
   seo-content:
-
     build:
       context: ./services/seo-content
 
@@ -33,9 +35,13 @@ services:
     env_file:
       - .env
 
+    networks:
+      - seo-network
+
+    restart: unless-stopped
+
 
   seo-onpage:
-
     build:
       context: ./services/seo-onpage
 
@@ -47,9 +53,13 @@ services:
     env_file:
       - .env
 
+    networks:
+      - seo-network
+
+    restart: unless-stopped
+
 
   seo-technical:
-
     build:
       context: ./services/seo-technical
 
@@ -61,25 +71,12 @@ services:
     env_file:
       - .env
 
+    networks:
+      - seo-network
 
-  postgres:
-
-    image: postgres:16
-
-    container_name: seo-postgres
-
-    environment:
-      POSTGRES_USER: seo_user
-      POSTGRES_PASSWORD: seo_password
-      POSTGRES_DB: seo_database
-
-    ports:
-      - "5432:5432"
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 
-volumes:
-
-  postgres_data:
+networks:
+  seo-network:
+    external: true
