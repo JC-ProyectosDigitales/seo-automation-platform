@@ -1,34 +1,43 @@
-import re
+from typing import Any, Dict, List
 
-def generate_faqs(content, keyword):
 
+def generate_faqs(
+    content: str,
+    keyword: str,
+) -> Dict[str, Any]:
     content_lower = content.lower()
-    keyword_lower = keyword.lower()
 
-    faqs = []
+    faqs: List[str] = [
+        f"¿Qué es {keyword}?",
+        f"¿Para qué sirve {keyword}?",
+        f"¿Cómo funciona {keyword}?",
+        f"¿Cuáles son los beneficios de {keyword}?",
+    ]
 
-    # FAQ base (reglas simples)
-    faqs.append(f"¿Qué es {keyword}?")
-    faqs.append(f"¿Para qué sirve {keyword}?")
-    faqs.append(f"¿Cómo funciona {keyword}?")
-    faqs.append(f"¿Por qué es importante {keyword}?")
-
-    # Detectar contexto del contenido para FAQs más específicas
     if "seo" in content_lower:
-        faqs.append("¿Cómo mejorar el SEO de una página web?")
-        faqs.append("¿Cuáles son las mejores prácticas de SEO?")
+        faqs.extend(
+            [
+                "¿Cómo mejorar el SEO de una página web?",
+                "¿Cuáles son las mejores prácticas de SEO?",
+            ]
+        )
 
     if "contenido" in content_lower:
-        faqs.append("¿Cómo crear contenido optimizado para SEO?")
+        faqs.append(
+            "¿Cómo crear contenido optimizado para SEO?"
+        )
 
     if "google" in content_lower:
-        faqs.append("¿Cómo posicionar en Google más rápido?")
+        faqs.append(
+            "¿Cómo mejorar el posicionamiento en Google?"
+        )
 
-    # Limitar duplicados
-    faqs = list(dict.fromkeys(faqs))
+    faqs = list(
+        dict.fromkeys(faqs)
+    )
 
     return {
         "keyword": keyword,
+        "total": len(faqs),
         "faqs": faqs,
-        "total": len(faqs)
     }

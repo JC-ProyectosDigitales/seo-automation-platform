@@ -1,80 +1,125 @@
-import re
+from typing import Any, Dict, List
 
-def analyze_meta(content):
+from bs4 import BeautifulSoup
 
-    recommendations = []
 
-    title_match = re.search(
-        r'<title>(.*?)</title>',
-        content,
-        re.IGNORECASE | re.DOTALL
+def analyze_meta(
+    html: str,
+    keyword: str,
+) -> Dict[str, Any]:
+    soup = BeautifulSoup(
+        html,
+        "html.parser",
     )
 
-    meta_match = re.search(
-        r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']',
-        content,
-        re.IGNORECASE
+    title = ""
+
+    if soup.title and soup.title.string:
+        title = " ".join(
+            soup.title.string.split()
+        )
+
+    description = ""
+
+    description_tag = soup.find(
+        "meta",
+        attrs={
+            "name": lambda value: (
+                value
+                and value.lower() == "description"
+            )
+        },
     )
 
-    title = title_match.group(1).strip() if title_match else ""
+    if description_tag:
+        description = " ".join(
+            description_tag.get(
+                "content",
+                "",
+            ).split()
+        )
 
-    description = (
-        meta_match.group(1).strip()
-        if meta_match else ""
+    title_length = len(
+        title
     )
 
-    title_length = len(title)
+    description_length = len(
+        description
+    )
 
-    description_length = len(description)
+    keyword_lower = keyword.lower()
 
-    # Validación título
+    title_keyword_present = (
+        keyword_lower in title.lower()
+        if title
+        else False
+    )
+
+    description_keyword_present = (
+        keyword_lower in description.lower()
+        if description
+        else False
+    )
+
+    recommendations: List[str] = []
 
     if not title:
         recommendations.append(
-            "No se encontró etiqueta TITLE."
+            "Agrega un título SEO."
         )
 
-    elif title_length < 30:
+    elif not 30 <= title_length <= 60:
         recommendations.append(
-            "El título SEO es demasiado corto."
+            "Mantén el título SEO entre 30 y 60 caracteres."
         )
 
-    elif title_length > 60:
+    if title and not title_keyword_present:
         recommendations.append(
-            "El título SEO supera los 60 caracteres."
+            "Incluye la palabra clave en el título SEO."
         )
-
-    else:
-        recommendations.append(
-            "La longitud del título SEO es adecuada."
-        )
-
-    # Validación meta description
 
     if not description:
         recommendations.append(
-            "No se encontró Meta Description."
+            "Agrega una Meta Description."
         )
 
-    elif description_length < 120:
+    elif not 120 <= description_length <= 160:
         recommendations.append(
-            "La Meta Description es demasiado corta."
+            "Mantén la Meta Description entre 120 y 160 caracteres."
         )
 
-    elif description_length > 160:
+    if (
+        description
+        and not description_keyword_present
+    ):
         recommendations.append(
-            "La Meta Description supera los 160 caracteres."
-        )
-
-    else:
-        recommendations.append(
-            "La Meta Description tiene una longitud adecuada."
+            "Incluye la palabra clave en la Meta Description."
         )
 
     return {
-        "title": title,
-        "title_length": title_length,
-        "description": description,
-        "description_length": description_length,
-        "recommendations": recommendations
+        "title": {
+            "exists": bool(title),
+            "text": title,
+            "length": title_length,
+            "optimal_length": (
+                30 <= title_length <= 60
+            ),
+            "keyword_present": title_keyword_present,
+            "recommended_min": 30,
+            "recommended_max": 60,
+        },
+        "description": {
+            "exists": bool(description),
+            "text": description,
+            "length": description_length,
+            "optimal_length": (
+                120 <= description_length <= 160
+            ),
+            "keyword_present": (
+                description_keyword_present
+            ),
+            "recommended_min": 120,
+            "recommended_max": 160,
+        },
+        "recommendations": recommendations,
     }

@@ -1,72 +1,81 @@
-def optimize_content(
-    seo_result,
-    heading_result,
-    readability_result,
-    meta_result
-):
+from typing import Any, Dict, List
 
+
+def optimize_content(
+    seo_result: Dict[str, Any],
+    heading_result: Dict[str, Any],
+    readability_result: Dict[str, Any],
+    meta_result: Dict[str, Any],
+) -> Dict[str, Any]:
     keyword = seo_result["keyword"]
 
-    optimization_tips = []
-
-    # Título sugerido
+    optimization_tips: List[str] = []
 
     suggested_title = (
-        f"{keyword.title()} | Guía Completa y Mejores Prácticas"
+        f"{keyword.title()}: Guía Completa y Mejores Prácticas"
     )
-
-    # H1 sugerido
 
     suggested_h1 = (
-        f"Guía Completa sobre {keyword.title()}"
+        f"Guía completa sobre {keyword}"
     )
-
-    # Meta Description sugerida
 
     suggested_meta = (
-        f"Descubre todo sobre {keyword}. "
-        f"Aprende estrategias, consejos y mejores prácticas "
-        f"para mejorar tus resultados."
+        f"Descubre qué es {keyword}, cómo funciona y cuáles son "
+        f"sus principales beneficios, estrategias y mejores prácticas."
     )
-
-    # Keyword
 
     if seo_result["density"] < 1:
         optimization_tips.append(
-            "Incrementar la presencia de la keyword principal."
+            "Incrementa de forma natural la presencia de la palabra clave principal."
         )
 
-    # H1
-
-    if heading_result["h1_count"] != 1:
+    elif seo_result["density"] > 3:
         optimization_tips.append(
-            "Mantener una única etiqueta H1."
+            "Reduce el uso repetitivo de la palabra clave principal."
         )
 
-    # H2
-
-    if heading_result["h2_count"] == 0:
+    if not heading_result["h1"]["exactly_one"]:
         optimization_tips.append(
-            "Agregar subtítulos H2 para mejorar la estructura."
+            "Utiliza exactamente una etiqueta H1."
         )
 
-    # Legibilidad
+    if not heading_result["h1"]["keyword_present"]:
+        optimization_tips.append(
+            "Incluye la palabra clave principal en el H1."
+        )
+
+    if heading_result["h2"]["count"] == 0:
+        optimization_tips.append(
+            "Agrega subtítulos H2 para organizar el contenido."
+        )
 
     if readability_result["reading_score"] < 60:
         optimization_tips.append(
-            "Reducir la longitud de las oraciones."
+            "Simplifica las oraciones para mejorar la legibilidad."
         )
 
-    # Meta Description
-
-    if meta_result["description_length"] < 120:
+    if readability_result["word_count"] < 300:
         optimization_tips.append(
-            "Ampliar la Meta Description."
+            "Amplía el contenido con información relevante y útil."
+        )
+
+    if not meta_result["title"]["optimal_length"]:
+        optimization_tips.append(
+            "Ajusta el título SEO al rango recomendado."
+        )
+
+    if not meta_result["description"]["optimal_length"]:
+        optimization_tips.append(
+            "Ajusta la Meta Description al rango recomendado."
         )
 
     return {
         "suggested_title": suggested_title,
         "suggested_h1": suggested_h1,
-        "suggested_meta": suggested_meta,
-        "optimization_tips": optimization_tips
+        "suggested_meta_description": suggested_meta,
+        "optimization_tips": list(
+            dict.fromkeys(
+                optimization_tips
+            )
+        ),
     }

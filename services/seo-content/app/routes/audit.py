@@ -1,31 +1,39 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 
 from modules.audit_service import execute as execute_audit
 from modules.web_scraper import extract_content
 
 
 router = APIRouter(
-    tags=["SEO Content"]
+    tags=["SEO Content"],
 )
 
 
 class AuditRequest(BaseModel):
     audit_id: str = Field(min_length=1)
-    website: str = Field(min_length=1)
+    website: HttpUrl
     keyword: str = Field(min_length=1)
+    content: str | None = None
 
 
 @router.post("/audit")
 def audit_content(data: AuditRequest):
     try:
-        content = extract_content(data.website)
+        website = str(data.website)
+        keyword = data.keyword.strip()
+
+        page = extract_content(
+            url=website,
+            supplied_content=data.content,
+        )
 
         result = execute_audit(
             audit_id=data.audit_id,
-            keyword=data.keyword,
-            content=content
+            website=website,
+            keyword=keyword,
+            page=page,
         )
 
         return result
@@ -37,13 +45,13 @@ def audit_content(data: AuditRequest):
                 "success": False,
                 "module": "seo-content",
                 "audit_id": data.audit_id,
-                "status": "error",
+                "status": "failed",
                 "score": 0,
                 "analysis": {},
                 "issues": [],
                 "recommendations": [],
                 "errors": [
-                    str(error)
-                ]
-            }
+                    str(error),
+                ],
+            },
         )

@@ -1,32 +1,91 @@
-import re
+from typing import Any, Dict, List
 
-def validate_headings(content):
+from bs4 import BeautifulSoup
 
-    h1_tags = re.findall(r'<h1.*?>(.*?)</h1>', content, re.IGNORECASE)
-    h2_tags = re.findall(r'<h2.*?>(.*?)</h2>', content, re.IGNORECASE)
-    h3_tags = re.findall(r'<h3.*?>(.*?)</h3>', content, re.IGNORECASE)
 
-    recommendations = []
+def _clean_text(value: str) -> str:
+    return " ".join(
+        value.split()
+    )
 
-    # Validar H1
-    if len(h1_tags) == 0:
-        recommendations.append("No se encontró ninguna etiqueta H1.")
-    elif len(h1_tags) > 1:
-        recommendations.append("Se encontraron múltiples etiquetas H1.")
-    else:
-        recommendations.append("La estructura H1 es correcta.")
 
-    # Validar H2
-    if len(h2_tags) == 0:
-        recommendations.append("Se recomienda agregar encabezados H2.")
+def validate_headings(
+    html: str,
+    keyword: str,
+) -> Dict[str, Any]:
+    soup = BeautifulSoup(
+        html,
+        "html.parser",
+    )
 
-    # Validar H3
-    if len(h3_tags) == 0:
-        recommendations.append("No se encontraron encabezados H3.")
+    h1_items: List[str] = [
+        _clean_text(tag.get_text(" ", strip=True))
+        for tag in soup.find_all("h1")
+    ]
+
+    h2_items: List[str] = [
+        _clean_text(tag.get_text(" ", strip=True))
+        for tag in soup.find_all("h2")
+    ]
+
+    h3_items: List[str] = [
+        _clean_text(tag.get_text(" ", strip=True))
+        for tag in soup.find_all("h3")
+    ]
+
+    keyword_lower = keyword.lower()
+
+    h1_keyword_present = any(
+        keyword_lower in item.lower()
+        for item in h1_items
+    )
+
+    recommendations: List[str] = []
+
+    if len(h1_items) == 0:
+        recommendations.append(
+            "Agrega una etiqueta H1 principal."
+        )
+
+    elif len(h1_items) > 1:
+        recommendations.append(
+            "Mantén una sola etiqueta H1 principal."
+        )
+
+    if h1_items and not h1_keyword_present:
+        recommendations.append(
+            "Incluye la palabra clave principal en el H1."
+        )
+
+    if len(h2_items) == 0:
+        recommendations.append(
+            "Agrega encabezados H2 para organizar las secciones."
+        )
+
+    if len(h3_items) == 0:
+        recommendations.append(
+            "Considera usar encabezados H3 para subsecciones."
+        )
 
     return {
-        "h1_count": len(h1_tags),
-        "h2_count": len(h2_tags),
-        "h3_count": len(h3_tags),
-        "recommendations": recommendations
+        "h1": {
+            "count": len(h1_items),
+            "items": h1_items,
+            "exactly_one": len(h1_items) == 1,
+            "keyword_present": h1_keyword_present,
+        },
+        "h2": {
+            "count": len(h2_items),
+            "items": h2_items,
+        },
+        "h3": {
+            "count": len(h3_items),
+            "items": h3_items,
+        },
+        "total": (
+            len(h1_items)
+            + len(h2_items)
+            + len(h3_items)
+        ),
+        "recommendations": recommendations,
     }

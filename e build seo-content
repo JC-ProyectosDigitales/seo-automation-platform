@@ -1,0 +1,67 @@
+[1mdiff --git a/services/seo-content/app/routes/audit.py b/services/seo-content/app/routes/audit.py[m
+[1mindex e942b12..b72487b 100644[m
+[1m--- a/services/seo-content/app/routes/audit.py[m
+[1m+++ b/services/seo-content/app/routes/audit.py[m
+[36m@@ -1,37 +1,36 @@[m
+ from fastapi import APIRouter[m
+ from fastapi.responses import JSONResponse[m
+[31m-from pydantic import BaseModel[m
+[32m+[m[32mfrom pydantic import BaseModel, Field[m
+ [m
+ from modules.audit_service import execute as execute_audit[m
+ from modules.web_scraper import extract_content[m
+ [m
+ [m
+[31m-router = APIRouter()[m
+[32m+[m[32mrouter = APIRouter([m
+[32m+[m[32m    tags=["SEO Content"][m
+[32m+[m[32m)[m
+ [m
+ [m
+ class AuditRequest(BaseModel):[m
+[31m-    audit_id: str[m
+[31m-    website: str[m
+[31m-    keyword: str[m
+[32m+[m[32m    audit_id: str = Field(min_length=1)[m
+[32m+[m[32m    website: str = Field(min_length=1)[m
+[32m+[m[32m    keyword: str = Field(min_length=1)[m
+ [m
+ [m
+ @router.post("/audit")[m
+ def audit_content(data: AuditRequest):[m
+[31m-[m
+     try:[m
+[31m-[m
+         content = extract_content(data.website)[m
+ [m
+         result = execute_audit([m
+[31m-            data.audit_id,[m
+[31m-            data.keyword,[m
+[31m-            content[m
+[32m+[m[32m            audit_id=data.audit_id,[m
+[32m+[m[32m            keyword=data.keyword,[m
+[32m+[m[32m            content=content[m
+         )[m
+ [m
+         return result[m
+ [m
+     except Exception as error:[m
+[31m-[m
+         return JSONResponse([m
+             status_code=500,[m
+             content={[m
+[36m@@ -39,8 +38,12 @@[m [mdef audit_content(data: AuditRequest):[m
+                 "module": "seo-content",[m
+                 "audit_id": data.audit_id,[m
+                 "status": "error",[m
+[32m+[m[32m                "score": 0,[m
+[32m+[m[32m                "analysis": {},[m
+[32m+[m[32m                "issues": [],[m
+[32m+[m[32m                "recommendations": [],[m
+                 "errors": [[m
+                     str(error)[m
+                 ][m
+             }[m
+[31m-        )[m
+\ No newline at end of file[m
+[32m+[m[32m        )[m
