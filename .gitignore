@@ -42,3 +42,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Repositorios fuente utilizados durante la integración
+integrations/*-source/
