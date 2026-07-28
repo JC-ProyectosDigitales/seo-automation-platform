@@ -1,43 +1,79 @@
-import { useState } from "react";
+import { Link } from "react-router-dom";
 
-import AuditForm from "../components/AuditForm";
-import AuditResult from "../components/AuditResult";
-import ModuleTable from "../components/ModuleTable";
+import QuickActions from "../components/QuickActions";
+import RecentAudits from "../components/RecentAudits";
 import StatsCards from "../components/StatsCards";
 
 export default function Dashboard() {
-
-    const [audit, setAudit] = useState(null);
-
     return (
+        <div className="dashboard-page">
+            <section className="welcome-panel">
+                <div className="welcome-content">
+                    <div className="welcome-badge">
+                        SEO Automation Platform
+                    </div>
 
-        <div style={{padding:"30px"}}>
+                    <h2>
+                        Controla tus auditorías SEO desde un solo lugar
+                    </h2>
 
-            <h1>
+                    <p>
+                        Ejecuta análisis, revisa el estado de los
+                        módulos y consulta los resultados almacenados
+                        por la plataforma.
+                    </p>
 
-                SEO Automation Platform
+                    <div className="welcome-actions">
+                        <Link
+                            to="/new-audit"
+                            className="primary-button"
+                        >
+                            <span aria-hidden="true">+</span>
+                            Nueva auditoría
+                        </Link>
 
-            </h1>
+                        <Link
+                            to="/history"
+                            className="secondary-button"
+                        >
+                            Ver historial
+                        </Link>
+                    </div>
+                </div>
 
-            <StatsCards />
+                <div
+                    className="welcome-visual"
+                    aria-hidden="true"
+                >
+                    <div className="visual-orbit visual-orbit-large" />
+                    <div className="visual-orbit visual-orbit-small" />
 
+                    <div className="visual-score">
+                        <span>SEO</span>
+                        <strong>100</strong>
+                        <small>Objetivo</small>
+                    </div>
+                </div>
+            </section>
 
-            <AuditForm
+            <section>
+                <div className="section-heading">
+                    <div>
+                        <h2>Resumen general</h2>
 
-                onCreated={setAudit}
+                        <p>
+                            Métricas actuales de la plataforma y sus
+                            servicios.
+                        </p>
+                    </div>
+                </div>
 
-            />
+                <StatsCards />
+            </section>
 
-            <hr />
+            <QuickActions />
 
-            <AuditResult audit={audit} />
-
-            <hr />
-
-            <ModuleTable />
-
+            <RecentAudits />
         </div>
-
     );
-
 }
