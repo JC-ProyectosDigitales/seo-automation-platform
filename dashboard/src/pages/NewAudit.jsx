@@ -1,11 +1,17 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import AuditForm from "../components/AuditForm";
-import AuditResult from "../components/AuditResult";
 
 export default function NewAudit() {
-    const [audit, setAudit] = useState(null);
+    const navigate = useNavigate();
+
+    function handleCreated(audit) {
+        if (!audit?.audit_id) {
+            return;
+        }
+
+        navigate(`/audit/${audit.audit_id}`);
+    }
 
     return (
         <div className="new-audit-page">
@@ -16,14 +22,15 @@ export default function NewAudit() {
                     </span>
 
                     <h2>
-                        Ejecuta una auditoría completa de tu sitio
+                        Ejecuta una auditoría completa de tu
+                        sitio
                     </h2>
 
                     <p>
-                        La plataforma coordinará los módulos SEO
-                        registrados para analizar el sitio web,
-                        almacenar los resultados y generar
-                        recomendaciones.
+                        Selecciona los módulos que participarán
+                        en el análisis. El API Gateway
+                        coordinará la ejecución y almacenará
+                        todos los resultados.
                     </p>
                 </div>
 
@@ -37,7 +44,9 @@ export default function NewAudit() {
 
             <div className="audit-workspace">
                 <section className="content-card audit-form-card">
-                    <AuditForm onCreated={setAudit} />
+                    <AuditForm
+                        onCreated={handleCreated}
+                    />
                 </section>
 
                 <aside className="audit-process-card">
@@ -45,8 +54,8 @@ export default function NewAudit() {
                         <h2>Proceso de auditoría</h2>
 
                         <p>
-                            La solicitud atravesará las siguientes
-                            etapas.
+                            La solicitud atravesará las
+                            siguientes etapas.
                         </p>
                     </div>
 
@@ -60,8 +69,8 @@ export default function NewAudit() {
                                 <h3>Validación</h3>
 
                                 <p>
-                                    Se valida el dominio y la
-                                    palabra clave ingresada.
+                                    Se valida el dominio, la
+                                    keyword y los módulos.
                                 </p>
                             </div>
                         </li>
@@ -72,12 +81,11 @@ export default function NewAudit() {
                             </span>
 
                             <div>
-                                <h3>API Gateway</h3>
+                                <h3>Registro</h3>
 
                                 <p>
-                                    El Gateway registra la
-                                    auditoría y coordina los
-                                    servicios.
+                                    El Gateway crea un
+                                    identificador único.
                                 </p>
                             </div>
                         </li>
@@ -88,11 +96,11 @@ export default function NewAudit() {
                             </span>
 
                             <div>
-                                <h3>Módulos SEO</h3>
+                                <h3>Ejecución</h3>
 
                                 <p>
-                                    Los módulos ejecutan sus
-                                    comprobaciones especializadas.
+                                    Los microservicios analizan
+                                    el sitio web.
                                 </p>
                             </div>
                         </li>
@@ -106,8 +114,8 @@ export default function NewAudit() {
                                 <h3>Resultados</h3>
 
                                 <p>
-                                    Los resultados quedan
-                                    almacenados para su consulta.
+                                    El dashboard consulta y
+                                    presenta la auditoría.
                                 </p>
                             </div>
                         </li>
@@ -118,60 +126,16 @@ export default function NewAudit() {
 
                         <div>
                             <strong>
-                                Servicios disponibles
+                                Arquitectura conectada
                             </strong>
 
                             <p>
-                                Content, OnPage, Technical y
-                                Monitor
+                                Gateway y cuatro servicios SEO
                             </p>
                         </div>
                     </div>
                 </aside>
             </div>
-
-            {audit && (
-    <section className="content-card audit-result-section">
-        <div className="result-section-heading">
-            <div>
-                <span className="page-eyebrow">
-                    Auditoría creada
-                </span>
-
-                <h2>Resultado de la solicitud</h2>
-            </div>
-
-            {audit.audit_id && (
-                <Link
-                    to={`/audit/${audit.audit_id}`}
-                    className="primary-button"
-                >
-                    Ver detalle completo
-                    <span aria-hidden="true">→</span>
-                </Link>
-            )}
-        </div>
-
-        <div className="audit-created-message">
-            <div className="audit-created-icon">
-                ✓
-            </div>
-
-            <div>
-                <h3>
-                    La auditoría fue registrada correctamente
-                </h3>
-
-                <p>
-                    La solicitud fue enviada a los módulos SEO y
-                    ya se encuentra disponible en el historial.
-                </p>
-            </div>
-        </div>
-
-        <AuditResult audit={audit} />
-    </section>
-)}
         </div>
     );
 }

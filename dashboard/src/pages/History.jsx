@@ -1,19 +1,9 @@
 import AuditHistory from "../components/AuditHistory";
 
-
-function History(){
-
+export default function History() {
     return (
-
-        <div>
-
+        <div className="history-page">
             <AuditHistory />
-
         </div>
-
     );
-
 }
-
-
-export default History;

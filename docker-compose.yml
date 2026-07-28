@@ -1,4 +1,23 @@
 services:
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+
+    container_name: seo-dashboard
+
+    ports:
+      - "5173:80"
+
+    depends_on:
+      - api-gateway
+
+    networks:
+      - seo-network
+
+    restart: unless-stopped
+
+
   api-gateway:
     build:
       context: .
