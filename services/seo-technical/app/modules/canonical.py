@@ -1,19 +1,19 @@
 import requests
 from bs4 import BeautifulSoup
 
+from app.modules.http_client import get_http_session
+
 
 def check_canonical(url: str):
-
     try:
-
-        response = requests.get(
-            url,
-            timeout=10,
-            allow_redirects=True
-        )
+        with get_http_session() as session:
+            response = session.get(
+                url,
+                timeout=10,
+                allow_redirects=True
+            )
 
         if response.status_code != 200:
-
             return {
                 "exists": False,
                 "href": None,
@@ -27,11 +27,17 @@ def check_canonical(url: str):
 
         canonical = soup.find(
             "link",
-            rel=lambda value: value and "canonical" in value
+            rel=lambda value: (
+                value
+                and (
+                    "canonical" in value
+                    if isinstance(value, list)
+                    else "canonical" in value.lower()
+                )
+            )
         )
 
         if canonical:
-
             return {
                 "exists": True,
                 "href": canonical.get("href"),
@@ -45,7 +51,6 @@ def check_canonical(url: str):
         }
 
     except requests.RequestException as error:
-
         return {
             "exists": False,
             "href": None,

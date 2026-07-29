@@ -2,13 +2,14 @@ from urllib.parse import urlparse
 
 import requests
 
+from app.modules.http_client import get_http_session
+
 
 def check_redirect(url: str):
-
     parsed = urlparse(url)
 
     protocol = parsed.scheme or "https"
-    host = parsed.netloc
+    host = parsed.netloc or parsed.path
 
     clean_host = host.removeprefix("www.")
 
@@ -24,34 +25,31 @@ def check_redirect(url: str):
         "non_www_redirect": None
     }
 
-    try:
+    with get_http_session() as session:
+        try:
+            response = session.get(
+                www_url,
+                allow_redirects=False,
+                timeout=10
+            )
 
-        response = requests.get(
-            www_url,
-            allow_redirects=False,
-            timeout=5
-        )
+            result["www_status"] = response.status_code
+            result["www_redirect"] = response.headers.get("Location")
 
-        result["www_status"] = response.status_code
-        result["www_redirect"] = response.headers.get("Location")
+        except requests.RequestException as error:
+            result["www_error"] = str(error)
 
-    except requests.RequestException as error:
+        try:
+            response = session.get(
+                non_www_url,
+                allow_redirects=False,
+                timeout=10
+            )
 
-        result["www_error"] = str(error)
+            result["non_www_status"] = response.status_code
+            result["non_www_redirect"] = response.headers.get("Location")
 
-    try:
-
-        response = requests.get(
-            non_www_url,
-            allow_redirects=False,
-            timeout=5
-        )
-
-        result["non_www_status"] = response.status_code
-        result["non_www_redirect"] = response.headers.get("Location")
-
-    except requests.RequestException as error:
-
-        result["non_www_error"] = str(error)
+        except requests.RequestException as error:
+            result["non_www_error"] = str(error)
 
     return result

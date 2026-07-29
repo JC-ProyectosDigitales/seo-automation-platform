@@ -1,19 +1,19 @@
 import requests
 from bs4 import BeautifulSoup
 
+from app.modules.http_client import get_http_session
+
 
 def check_meta_robots(url: str):
-
     try:
-
-        response = requests.get(
-            url,
-            timeout=10,
-            allow_redirects=True
-        )
+        with get_http_session() as session:
+            response = session.get(
+                url,
+                timeout=10,
+                allow_redirects=True
+            )
 
         if response.status_code != 200:
-
             return {
                 "exists": False,
                 "content": None,
@@ -32,13 +32,12 @@ def check_meta_robots(url: str):
             attrs={
                 "name": lambda value: (
                     value
-                    and value.lower() == "robots"
+                    and value.strip().lower() == "robots"
                 )
             }
         )
 
         if not meta:
-
             return {
                 "exists": False,
                 "content": None,
@@ -50,18 +49,23 @@ def check_meta_robots(url: str):
         content = meta.get(
             "content",
             ""
-        ).lower()
+        ).strip().lower()
+
+        directives = {
+            directive.strip()
+            for directive in content.split(",")
+            if directive.strip()
+        }
 
         return {
             "exists": True,
             "content": content,
-            "index": "noindex" not in content,
-            "follow": "nofollow" not in content,
+            "index": "noindex" not in directives,
+            "follow": "nofollow" not in directives,
             "status_code": response.status_code
         }
 
     except requests.RequestException as error:
-
         return {
             "exists": False,
             "content": None,
