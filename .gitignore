@@ -36,3 +36,4 @@ Thumbs.db
 # Repositorios fuente utilizados durante la integración
 integrations/*-source/
 # Repositorios fuente del equipo
+.env

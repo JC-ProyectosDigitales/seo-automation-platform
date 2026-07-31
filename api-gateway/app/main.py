@@ -43,10 +43,13 @@ DEFAULT_MODULES = [
     {
         "name": "seo-monitor",
         "url": "http://seo-monitor:5006/audit",
-        "description": "Monitoreo de disponibilidad y estado del sitio web",
+        "description": (
+		"Monitoreo de disponibilidad, "
+		"rendimiento y PageSpeed Insights"
+	),
         "active": True,
         "priority": 40,
-        "timeout": 30
+        "timeout": 120
     },
 ]
 

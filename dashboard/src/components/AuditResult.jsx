@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import PageSpeedSection from "./PageSpeedSection";
 
 const MODULE_INFORMATION = {
     "seo-content": {
@@ -23,7 +24,7 @@ const MODULE_INFORMATION = {
     "seo-monitor": {
         title: "SEO Monitor",
         description:
-            "Disponibilidad, SSL y rendimiento.",
+            "Disponibilidad, SSL, rendimiento y PageSpeed Insights.",
         icon: "M",
     },
 };
@@ -598,6 +599,14 @@ function ModuleCard({ module }) {
             </div>
 
             <ModuleMetrics module={module} />
+	    
+            {module.key === "seo-monitor" && (
+		<PageSpeedSection
+		    pagespeed={
+			module.analysis?.pagespeed
+		    }
+		/>
+	    )}
 
             <div className="module-count-summary">
                 <div>

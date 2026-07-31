@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Dict
 
 from app.modules.availability import (
@@ -6,6 +7,9 @@ from app.modules.availability import (
 from app.modules.http_monitor import monitor_http
 from app.modules.issues import (
     build_issues_and_recommendations,
+)
+from app.modules.pagespeed import (
+    analyze_pagespeed,
 )
 from app.modules.redirects import analyze_redirects
 from app.modules.response_time import (
@@ -18,8 +22,11 @@ from app.modules.ssl_checker import check_ssl
 async def analyze_monitoring(
     website: str,
 ) -> Dict[str, Any]:
-    http_result = await monitor_http(
-        website
+    http_result, pagespeed_result = (
+        await asyncio.gather(
+            monitor_http(website),
+            analyze_pagespeed(website),
+        )
     )
 
     ssl_result = await check_ssl(
@@ -69,6 +76,7 @@ async def analyze_monitoring(
             ),
         },
         "ssl": ssl_result,
+        "pagespeed": pagespeed_result,
     }
 
     score = calculate_score(
@@ -91,6 +99,15 @@ async def analyze_monitoring(
     if ssl_result.get("error"):
         errors.append(
             ssl_result["error"]
+        )
+
+    pagespeed_error = (
+        pagespeed_result.get("error")
+    )
+
+    if pagespeed_error:
+        errors.append(
+            pagespeed_error
         )
 
     success = (
