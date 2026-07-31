@@ -49,7 +49,7 @@ DEFAULT_MODULES = [
 	),
         "active": True,
         "priority": 40,
-        "timeout": 120
+        "timeout": 210
     },
 ]
 

@@ -12,9 +12,6 @@ from app.config import (
 
 PAGESPEED_CATEGORIES = (
     "performance",
-    "accessibility",
-    "best-practices",
-    "seo",
 )
 
 
@@ -371,6 +368,15 @@ def _build_error_result(
         "final_url": None,
         "fetch_time": None,
         "lighthouse_version": None,
+
+        # Compatibilidad con el formato
+        # utilizado por el módulo externo.
+        "performance_score": None,
+        "lcp": None,
+        "cls": None,
+        "fcp": None,
+        "speed_index": None,
+
         "scores": {
             "performance": None,
             "accessibility": None,
@@ -660,6 +666,27 @@ async def analyze_pagespeed(
                 "lighthouseVersion"
             )
         ),
+
+        # Compatibilidad con el formato
+        # utilizado por el módulo externo.
+        "performance_score": scores.get(
+            "performance"
+        ),
+        "lcp": metrics[
+            "largest_contentful_paint"
+        ].get("display_value"),
+        "cls": metrics[
+            "cumulative_layout_shift"
+        ].get("display_value"),
+        "fcp": metrics[
+            "first_contentful_paint"
+        ].get("display_value"),
+        "speed_index": metrics[
+            "speed_index"
+        ].get("display_value"),
+
+        # Estructura completa utilizada
+        # por nuestro dashboard.
         "scores": scores,
         "metrics": metrics,
         "opportunities": (
