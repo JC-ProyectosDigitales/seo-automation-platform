@@ -1,44 +1,74 @@
-const SCORE_LABELS = {
-    performance: "Rendimiento",
-    accessibility: "Accesibilidad",
-    best_practices: "Mejores prácticas",
-    seo: "SEO",
+const SCORE_INFORMATION = {
+    performance: {
+        label: "Rendimiento",
+        abbreviation: "PERF",
+    },
+    accessibility: {
+        label: "Accesibilidad",
+        abbreviation: "A11Y",
+    },
+    best_practices: {
+        label: "Mejores prácticas",
+        abbreviation: "BP",
+    },
+    seo: {
+        label: "SEO",
+        abbreviation: "SEO",
+    },
 };
 
 const METRIC_INFORMATION = {
     first_contentful_paint: {
         abbreviation: "FCP",
         label: "First Contentful Paint",
+        missingReason:
+            "Lighthouse no pudo determinar cuándo apareció el primer contenido visible.",
     },
     largest_contentful_paint: {
         abbreviation: "LCP",
         label: "Largest Contentful Paint",
+        missingReason:
+            "Lighthouse no pudo medir el elemento de contenido principal.",
     },
     cumulative_layout_shift: {
         abbreviation: "CLS",
         label: "Cumulative Layout Shift",
+        missingReason:
+            "No se obtuvo información suficiente sobre los cambios de diseño.",
     },
     interaction_to_next_paint: {
         abbreviation: "INP",
         label: "Interaction to Next Paint",
+        missingReason:
+            "No existen suficientes datos reales de usuarios para calcular esta métrica.",
     },
     total_blocking_time: {
         abbreviation: "TBT",
         label: "Total Blocking Time",
+        missingReason:
+            "Lighthouse no pudo calcular el tiempo total de bloqueo.",
     },
     speed_index: {
         abbreviation: "SI",
         label: "Speed Index",
+        missingReason:
+            "Lighthouse no pudo calcular la velocidad visual de carga.",
     },
 };
 
 const DIAGNOSTIC_LABELS = {
-    total_byte_weight: "Peso total de la página",
-    dom_size: "Tamaño del DOM",
-    main_thread_work: "Trabajo del hilo principal",
-    bootup_time: "Tiempo de ejecución de JavaScript",
-    unused_javascript: "JavaScript sin utilizar",
-    unused_css: "CSS sin utilizar",
+    total_byte_weight:
+        "Peso total de la página",
+    dom_size:
+        "Tamaño del DOM",
+    main_thread_work:
+        "Trabajo del hilo principal",
+    bootup_time:
+        "Ejecución de JavaScript",
+    unused_javascript:
+        "JavaScript sin utilizar",
+    unused_css:
+        "CSS sin utilizar",
     render_blocking_resources:
         "Recursos que bloquean el renderizado",
     uses_optimized_images:
@@ -46,33 +76,61 @@ const DIAGNOSTIC_LABELS = {
     uses_webp_images:
         "Formatos modernos de imagen",
     server_response_time:
-        "Tiempo de respuesta del servidor",
+        "Respuesta inicial del servidor",
 };
 
-function getScoreClass(score) {
-    if (
-        score === null ||
-        score === undefined
-    ) {
-        return "pagespeed-score-unknown";
+const OPTIONAL_SCORE_NAMES = [
+    "accessibility",
+    "best_practices",
+    "seo",
+];
+
+function isMissingValue(value) {
+    return (
+        value === null ||
+        value === undefined ||
+        value === ""
+    );
+}
+
+function getScoreInformation(score) {
+    if (isMissingValue(score)) {
+        return {
+            className:
+                "pagespeed-score-unknown",
+            status: "No evaluado",
+        };
     }
 
     if (score >= 90) {
-        return "pagespeed-score-good";
+        return {
+            className:
+                "pagespeed-score-good",
+            status: "Bueno",
+        };
     }
 
     if (score >= 50) {
-        return "pagespeed-score-medium";
+        return {
+            className:
+                "pagespeed-score-medium",
+            status: "Mejorable",
+        };
     }
 
-    return "pagespeed-score-low";
+    return {
+        className:
+            "pagespeed-score-low",
+        status: "Deficiente",
+    };
 }
 
 function getRatingInformation(rating) {
     const ratings = {
         good: {
             label: "Bueno",
-            className: "pagespeed-rating-good",
+            className:
+                "pagespeed-rating-good",
         },
         needs_improvement: {
             label: "Mejorable",
@@ -81,7 +139,8 @@ function getRatingInformation(rating) {
         },
         poor: {
             label: "Deficiente",
-            className: "pagespeed-rating-poor",
+            className:
+                "pagespeed-rating-poor",
         },
         unknown: {
             label: "Sin datos",
@@ -123,19 +182,152 @@ function formatBytes(value) {
     return `${Math.round(bytes)} B`;
 }
 
+function getGeneralErrorTitle(error) {
+    const code = String(
+        error?.code || ""
+    ).toUpperCase();
+
+    const statusCode =
+        error?.status_code;
+
+    if (statusCode === 429) {
+        return "Cuota de PageSpeed agotada";
+    }
+
+    if (code.includes("TIMEOUT")) {
+        return "El análisis excedió el tiempo de espera";
+    }
+
+    if (
+        statusCode === 401 ||
+        statusCode === 403
+    ) {
+        return "La solicitud no pudo autenticarse";
+    }
+
+    if (statusCode === 404) {
+        return "La página no pudo encontrarse";
+    }
+
+    if (
+        statusCode &&
+        statusCode >= 500
+    ) {
+        return "PageSpeed presentó un error temporal";
+    }
+
+    if (
+        code.includes(
+            "ERRORED_DOCUMENT_REQUEST"
+        )
+    ) {
+        return "La página no pudo cargarse";
+    }
+
+    if (code.includes("NO_FCP")) {
+        return "La página no mostró contenido visible";
+    }
+
+    if (code.includes("PAGE_HUNG")) {
+        return "La página dejó de responder";
+    }
+
+    return "No fue posible completar el análisis";
+}
+
+function getGeneralErrorExplanation(
+    error
+) {
+    const code = String(
+        error?.code || ""
+    ).toUpperCase();
+
+    const statusCode =
+        error?.status_code;
+
+    if (statusCode === 429) {
+        return (
+            "Se alcanzó el límite permitido por la API de Google. " +
+            "Las demás comprobaciones del sitio pueden continuar, " +
+            "pero las métricas de Lighthouse no estarán disponibles."
+        );
+    }
+
+    if (code.includes("TIMEOUT")) {
+        return (
+            "Google comenzó el análisis, pero no devolvió el resultado " +
+            "dentro del tiempo configurado. Puede ocurrir en páginas " +
+            "pesadas, lentas o con muchos recursos externos."
+        );
+    }
+
+    if (
+        statusCode === 401 ||
+        statusCode === 403
+    ) {
+        return (
+            "La clave de la API puede ser inválida, estar restringida " +
+            "o no tener habilitado PageSpeed Insights."
+        );
+    }
+
+    if (statusCode === 404) {
+        return (
+            "La URL respondió como página inexistente o Google no pudo localizarla."
+        );
+    }
+
+    if (
+        statusCode &&
+        statusCode >= 500
+    ) {
+        return (
+            "Google Lighthouse presentó una falla temporal. " +
+            "La auditoría puede volver a intentarse más tarde."
+        );
+    }
+
+    if (
+        code.includes(
+            "ERRORED_DOCUMENT_REQUEST"
+        )
+    ) {
+        return (
+            "Lighthouse no pudo descargar el documento principal. " +
+            "El sitio pudo bloquear la solicitud o interrumpir la conexión."
+        );
+    }
+
+    if (code.includes("NO_FCP")) {
+        return (
+            "No apareció contenido visible durante el tiempo esperado, " +
+            "por lo que Lighthouse no pudo calcular las métricas visuales."
+        );
+    }
+
+    if (code.includes("PAGE_HUNG")) {
+        return (
+            "La página dejó de responder mientras Lighthouse ejecutaba la prueba."
+        );
+    }
+
+    return (
+        error?.message ||
+        "Google PageSpeed Insights no devolvió información suficiente."
+    );
+}
+
 function PageSpeedUnavailable({
     pagespeed,
 }) {
-    const error = pagespeed?.error || {};
-
-    const isQuotaError =
-        error.status_code === 429;
+    const error =
+        pagespeed?.error || {};
 
     return (
         <section className="pagespeed-section">
-            <div className="pagespeed-section-heading">
-                <div>
-                    <span className="pagespeed-eyebrow">
+            <header className="pagespeed-main-header">
+                <div className="pagespeed-main-title">
+                    <span className="pagespeed-google-label">
                         Google Lighthouse
                     </span>
 
@@ -147,24 +339,37 @@ function PageSpeedUnavailable({
                 <span className="pagespeed-status pagespeed-status-failed">
                     No disponible
                 </span>
-            </div>
+            </header>
 
             <div className="pagespeed-error-card">
                 <div className="pagespeed-error-icon">
                     !
                 </div>
 
-                <div>
+                <div className="pagespeed-error-content">
                     <strong>
-                        {isQuotaError
-                            ? "Cuota de PageSpeed agotada"
-                            : "No fue posible completar el análisis"}
+                        {getGeneralErrorTitle(
+                            error
+                        )}
                     </strong>
 
                     <p>
-                        {error.message ||
-                            "Google PageSpeed Insights no devolvió resultados."}
+                        {getGeneralErrorExplanation(
+                            error
+                        )}
                     </p>
+
+                    {error.message && (
+                        <details className="pagespeed-error-details">
+                            <summary>
+                                Ver respuesta técnica
+                            </summary>
+
+                            <p>
+                                {error.message}
+                            </p>
+                        </details>
+                    )}
 
                     <div className="pagespeed-error-meta">
                         {error.code && (
@@ -198,10 +403,143 @@ function PageSpeedUnavailable({
     );
 }
 
-function PageSpeedScores({ scores }) {
+function getMissingDataMessages(
+    pagespeed
+) {
+    const messages = [];
+
+    const scores =
+        pagespeed?.scores || {};
+
+    const missingOptionalScores =
+        OPTIONAL_SCORE_NAMES.filter(
+            (scoreName) =>
+                isMissingValue(
+                    scores[scoreName]
+                )
+        );
+
+    if (
+        missingOptionalScores.length ===
+        OPTIONAL_SCORE_NAMES.length
+    ) {
+        messages.push(
+            "Accesibilidad, Mejores prácticas y SEO no fueron ejecutadas porque la auditoría está configurada únicamente para Rendimiento."
+        );
+    } else if (
+        missingOptionalScores.length > 0
+    ) {
+        const labels =
+            missingOptionalScores.map(
+                (scoreName) =>
+                    SCORE_INFORMATION[
+                        scoreName
+                    ]?.label ||
+                    scoreName
+            );
+
+        messages.push(
+            `No se obtuvo puntuación para: ${labels.join(
+                ", "
+            )}.`
+        );
+    }
+
+    const metrics =
+        pagespeed?.metrics || {};
+
+    const inp =
+        metrics.interaction_to_next_paint;
+
+    if (
+        !inp ||
+        isMissingValue(
+            inp.display_value
+        )
+    ) {
+        messages.push(
+            "INP no está disponible porque Google no cuenta con suficientes datos reales de usuarios para esta página."
+        );
+    }
+
+    const warnings =
+        pagespeed?.warnings;
+
+    if (Array.isArray(warnings)) {
+        warnings.forEach(
+            (warning) => {
+                if (
+                    typeof warning ===
+                        "string" &&
+                    warning.trim()
+                ) {
+                    messages.push(
+                        warning.trim()
+                    );
+                }
+            }
+        );
+    }
+
+    return [
+        ...new Set(messages),
+    ];
+}
+
+function PageSpeedDataNotice({
+    pagespeed,
+}) {
+    const messages =
+        getMissingDataMessages(
+            pagespeed
+        );
+
+    if (messages.length === 0) {
+        return null;
+    }
+
+    return (
+        <aside className="pagespeed-data-notice">
+            <div className="pagespeed-data-notice-icon">
+                i
+            </div>
+
+            <div className="pagespeed-data-notice-content">
+                <div className="pagespeed-data-notice-heading">
+                    <strong>
+                        Información parcial
+                    </strong>
+
+                    <span>
+                        Algunos datos fueron omitidos
+                    </span>
+                </div>
+
+                <ul>
+                    {messages.map(
+                        (
+                            message,
+                            index
+                        ) => (
+                            <li
+                                key={`${index}-${message}`}
+                            >
+                                {message}
+                            </li>
+                        )
+                    )}
+                </ul>
+            </div>
+        </aside>
+    );
+}
+
+function PageSpeedScores({
+    scores,
+}) {
     return (
         <section className="pagespeed-content-block">
-            <div className="pagespeed-block-heading">
+            <header className="pagespeed-block-heading">
                 <div>
                     <span className="pagespeed-eyebrow">
                         Lighthouse
@@ -212,43 +550,78 @@ function PageSpeedScores({ scores }) {
                     </h5>
                 </div>
 
-                <span>
+                <span className="pagespeed-scale">
                     Escala de 0 a 100
                 </span>
-            </div>
+            </header>
 
             <div className="pagespeed-score-grid">
                 {Object.entries(
-                    SCORE_LABELS
+                    SCORE_INFORMATION
                 ).map(
                     ([
                         scoreName,
-                        label,
+                        information,
                     ]) => {
                         const score =
                             scores?.[
                                 scoreName
                             ];
 
+                        const missing =
+                            isMissingValue(
+                                score
+                            );
+
+                        const scoreInfo =
+                            getScoreInformation(
+                                score
+                            );
+
                         return (
                             <article
                                 key={
                                     scoreName
                                 }
-                                className={`pagespeed-score-card ${getScoreClass(
-                                    score
-                                )}`}
+                                className={`pagespeed-score-card ${scoreInfo.className}`}
                             >
-                                <div className="pagespeed-score-circle">
-                                    <strong>
-                                        {score ??
-                                            "—"}
-                                    </strong>
+                                <div className="pagespeed-score-visual">
+                                    {missing ? (
+                                        <div className="pagespeed-score-placeholder">
+                                            —
+                                        </div>
+                                    ) : (
+                                        <div className="pagespeed-score-circle">
+                                            <strong>
+                                                {
+                                                    score
+                                                }
+                                            </strong>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <span>
-                                    {label}
-                                </span>
+                                <div className="pagespeed-score-content">
+                                    <div className="pagespeed-score-title-row">
+                                        <strong>
+                                            {
+                                                information.label
+                                            }
+                                        </strong>
+
+                                        <span>
+                                            {
+                                                scoreInfo.status
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <small>
+                                        {missing
+                                            ? "Esta categoría no se incluyó en la ejecución actual."
+                                            : `Puntuación obtenida: ${score}/100`}
+                                    </small>
+                                </div>
                             </article>
                         );
                     }
@@ -258,10 +631,12 @@ function PageSpeedScores({ scores }) {
     );
 }
 
-function PageSpeedMetrics({ metrics }) {
+function PageSpeedMetrics({
+    metrics,
+}) {
     return (
         <section className="pagespeed-content-block">
-            <div className="pagespeed-block-heading">
+            <header className="pagespeed-block-heading">
                 <div>
                     <span className="pagespeed-eyebrow">
                         Rendimiento
@@ -271,7 +646,7 @@ function PageSpeedMetrics({ metrics }) {
                         Métricas de laboratorio
                     </h5>
                 </div>
-            </div>
+            </header>
 
             <div className="pagespeed-metrics-grid">
                 {Object.entries(
@@ -286,6 +661,11 @@ function PageSpeedMetrics({ metrics }) {
                                 metricName
                             ] || {};
 
+                        const missing =
+                            isMissingValue(
+                                metric.display_value
+                            );
+
                         const rating =
                             getRatingInformation(
                                 metric.rating
@@ -296,14 +676,26 @@ function PageSpeedMetrics({ metrics }) {
                                 key={
                                     metricName
                                 }
-                                className="pagespeed-metric-card"
+                                className={`pagespeed-metric-card ${
+                                    missing
+                                        ? "pagespeed-metric-card-missing"
+                                        : ""
+                                }`}
                             >
-                                <div className="pagespeed-metric-header">
-                                    <strong>
-                                        {
-                                            information.abbreviation
-                                        }
-                                    </strong>
+                                <header className="pagespeed-metric-header">
+                                    <div className="pagespeed-metric-name">
+                                        <strong>
+                                            {
+                                                information.abbreviation
+                                            }
+                                        </strong>
+
+                                        <span>
+                                            {
+                                                information.label
+                                            }
+                                        </span>
+                                    </div>
 
                                     <span
                                         className={`pagespeed-rating ${rating.className}`}
@@ -312,18 +704,30 @@ function PageSpeedMetrics({ metrics }) {
                                             rating.label
                                         }
                                     </span>
+                                </header>
+
+                                <div className="pagespeed-metric-result">
+                                    <strong>
+                                        {missing
+                                            ? "No disponible"
+                                            : metric.display_value}
+                                    </strong>
+
+                                    {!missing &&
+                                        metric.numeric_unit && (
+                                            <small>
+                                                Medición de laboratorio
+                                            </small>
+                                        )}
                                 </div>
 
-                                <span className="pagespeed-metric-label">
-                                    {
-                                        information.label
-                                    }
-                                </span>
-
-                                <strong className="pagespeed-metric-value">
-                                    {metric.display_value ||
-                                        "No disponible"}
-                                </strong>
+                                {missing && (
+                                    <p className="pagespeed-metric-reason">
+                                        {
+                                            information.missingReason
+                                        }
+                                    </p>
+                                )}
                             </article>
                         );
                     }
@@ -337,7 +741,9 @@ function PageSpeedOpportunities({
     opportunities,
 }) {
     if (
-        !Array.isArray(opportunities) ||
+        !Array.isArray(
+            opportunities
+        ) ||
         opportunities.length === 0
     ) {
         return null;
@@ -345,7 +751,7 @@ function PageSpeedOpportunities({
 
     return (
         <section className="pagespeed-content-block">
-            <div className="pagespeed-block-heading">
+            <header className="pagespeed-block-heading">
                 <div>
                     <span className="pagespeed-eyebrow">
                         Optimización
@@ -356,14 +762,14 @@ function PageSpeedOpportunities({
                     </h5>
                 </div>
 
-                <span>
-                    Primeras{" "}
+                <span className="pagespeed-scale">
                     {Math.min(
                         opportunities.length,
                         5
-                    )}
+                    )}{" "}
+                    resultados
                 </span>
-            </div>
+            </header>
 
             <div className="pagespeed-opportunity-list">
                 {opportunities
@@ -444,7 +850,10 @@ function PageSpeedDiagnostics({
             ([, diagnostic]) =>
                 diagnostic &&
                 typeof diagnostic ===
-                    "object"
+                    "object" &&
+                !isMissingValue(
+                    diagnostic.display_value
+                )
         );
 
     if (
@@ -456,7 +865,7 @@ function PageSpeedDiagnostics({
 
     return (
         <section className="pagespeed-content-block">
-            <div className="pagespeed-block-heading">
+            <header className="pagespeed-block-heading">
                 <div>
                     <span className="pagespeed-eyebrow">
                         Lighthouse
@@ -466,7 +875,7 @@ function PageSpeedDiagnostics({
                         Diagnósticos
                     </h5>
                 </div>
-            </div>
+            </header>
 
             <div className="pagespeed-diagnostics-grid">
                 {availableDiagnostics.map(
@@ -489,8 +898,9 @@ function PageSpeedDiagnostics({
                             </span>
 
                             <strong>
-                                {diagnostic.display_value ||
-                                    "No disponible"}
+                                {
+                                    diagnostic.display_value
+                                }
                             </strong>
 
                             {typeof diagnostic.score ===
@@ -528,9 +938,9 @@ export default function PageSpeedSection({
 
     return (
         <section className="pagespeed-section">
-            <div className="pagespeed-section-heading">
-                <div>
-                    <span className="pagespeed-eyebrow">
+            <header className="pagespeed-main-header">
+                <div className="pagespeed-main-title">
+                    <span className="pagespeed-google-label">
                         Google Lighthouse
                     </span>
 
@@ -552,14 +962,22 @@ export default function PageSpeedSection({
                 <span className="pagespeed-status pagespeed-status-success">
                     Disponible
                 </span>
-            </div>
+            </header>
+
+            <PageSpeedDataNotice
+                pagespeed={pagespeed}
+            />
 
             <PageSpeedScores
-                scores={pagespeed.scores}
+                scores={
+                    pagespeed.scores
+                }
             />
 
             <PageSpeedMetrics
-                metrics={pagespeed.metrics}
+                metrics={
+                    pagespeed.metrics
+                }
             />
 
             <PageSpeedOpportunities
@@ -582,14 +1000,13 @@ export default function PageSpeedSection({
                 </span>
 
                 <span>
-                    Fecha:{" "}
                     {pagespeed.fetch_time
                         ? new Date(
                               pagespeed.fetch_time
                           ).toLocaleString(
                               "es-MX"
                           )
-                        : "No disponible"}
+                        : "Fecha no disponible"}
                 </span>
             </footer>
         </section>
