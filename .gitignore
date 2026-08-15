@@ -36,3 +36,12 @@ Thumbs.db
 # Repositorios fuente utilizados durante la integración
 integrations/*-source/
 # Repositorios fuente del equipo
+
+# Testing cache
+.pytest_cache/
+
+# Local project inspection files
+estructura.txt
+
+# Local backup directories
+*-backup/
