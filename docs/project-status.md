@@ -2,236 +2,387 @@
 
 ## SEO Automation Platform
 
-Documento de seguimiento del estado actual de desarrollo de la plataforma.
+Este documento resume el estado real de desarrollo de SEO Automation Platform en la rama `main`.
 
 ---
 
 # 1. Estado general
 
-La plataforma cuenta actualmente con una arquitectura basada en microservicios donde un API Gateway centraliza la comunicación entre el dashboard web, la base de datos y los servicios especializados de análisis SEO.
+La plataforma funciona actualmente mediante una arquitectura basada en microservicios.
 
-Estado actual:
+El API Gateway centraliza la comunicación entre:
 
-|      Componente         | Estado            |
-|-------------------------|-------------------|
-| API Gateway             | Funcionando       |
-| Dashboard Web           | Funcionando       |
-| Base de datos           | Funcionando       |
-| Gestión de auditorías   | Funcionando       |
-| Historial de auditorías | Funcionando       |
-| Dashboard de métricas   | Funcionando       |
-| Gestión de módulos      | Funcionando       |
-| Servicios SEO           | Estructura creada |
+- Dashboard web;
+- PostgreSQL;
+- servicios SEO especializados.
+
+Estado general:
+
+| Componente | Estado |
+|---|---|
+| Dashboard Web | Funcional |
+| API Gateway | Funcional |
+| PostgreSQL | Funcional |
+| Gestión de auditorías | Funcional |
+| Historial de auditorías | Funcional |
+| Consulta detallada de auditorías | Funcional |
+| Estadísticas | Funcional |
+| Gestión de módulos | Funcional |
+| Selección de módulos | Funcional |
+| SEO Content | Funcional |
+| SEO OnPage | Funcional |
+| SEO Technical | Funcional |
+| SEO Monitor | Funcional |
 
 ---
 
-# 2. Componentes implementados
+# 2. Dashboard
 
-## Dashboard Web
+El Dashboard está desarrollado con:
 
-Estado:
+- React;
+- React Router;
+- Vite;
+- Axios.
 
-Funcionando.
+Dentro de Docker se distribuye mediante Nginx.
 
 Actualmente permite:
 
-- Crear auditorías.
-- Consultar resultados de auditorías.
-- Visualizar historial de auditorías.
-- Consultar métricas generales.
-- Visualizar módulos disponibles.
+- crear auditorías;
+- consultar resultados;
+- visualizar historial;
+- abrir auditorías individuales;
+- visualizar métricas;
+- consultar módulos registrados;
+- mostrar resultados generados por los servicios SEO.
 
+Puerto publicado:
 
----
+```text
+5173
+```
 
-## API Gateway
+3. API Gateway
 
-Estado:
+El API Gateway está desarrollado con FastAPI.
 
-Funcionando.
+Sus responsabilidades actuales incluyen:
 
-Responsabilidades actuales:
+recibir solicitudes del Dashboard;
+crear auditorías;
+generar identificadores;
+almacenar información en PostgreSQL;
+obtener módulos activos;
+filtrar módulos seleccionados;
+ejecutar microservicios;
+aplicar prioridad;
+aplicar timeout;
+detectar módulos no disponibles;
+consolidar respuestas;
+guardar resultados;
+mantener historial;
+exponer estadísticas;
+administrar módulos.
 
-- Recibir solicitudes del dashboard.
-- Gestionar auditorías.
-- Gestionar módulos.
-- Consultar información almacenada.
-- Exponer estadísticas generales.
+Puerto publicado:
 
+5100
 
-Endpoints implementados:
+Swagger:
 
-### Auditorías
+http://localhost:5100/docs
+4. Módulos registrados por defecto
 
-GET /api/audits
+Actualmente el API Gateway registra automáticamente los siguientes módulos cuando todavía no existen en PostgreSQL:
 
+| Módulo          | URL interna                       | Prioridad | Timeout |
+| --------------- | --------------------------------- | --------: | ------: |
+| `seo-content`   | `http://seo-content:5003/audit`   |        10 |    30 s |
+| `seo-onpage`    | `http://seo-onpage:5004/audit`    |        20 |    30 s |
+| `seo-technical` | `http://seo-technical:5005/audit` |        30 |    30 s |
+| `seo-monitor`   | `http://seo-monitor:5006/audit`   |        40 |    30 s |
 
-Obtiene el historial de auditorías.
+5. Selección de módulos
 
+El orquestador permite:
 
+ejecutar todos los módulos activos;
+ejecutar únicamente módulos seleccionados.
 
-GET /api/audits/{audit_id}
+Si un módulo solicitado:
 
+no existe;
+está inactivo;
+no está disponible;
 
-Obtiene el detalle de una auditoría.
+el Gateway genera una respuesta controlada con:
 
+MODULE_NOT_AVAILABLE
 
----
+Esto evita que una auditoría falle completamente por un módulo inexistente.
 
-### Módulos
+6. Estados de auditoría
 
+El flujo de ejecución utiliza estados como:
 
-GET /api/modules
+pending
+running
+completed
+failed
 
+Durante el procesamiento se almacenan datos como:
 
-Obtiene los módulos registrados.
+fecha de creación;
+fecha de inicio;
+fecha de finalización;
+tiempo de ejecución;
+resultados;
+mensaje de error cuando corresponde.
+7. Base de datos
 
+La plataforma utiliza PostgreSQL.
 
+Las entidades principales son:
 
-POST /api/modules
-
-
-Registra un nuevo módulo.
-
-
-
-GET /api/modules/{module_id}
-
-
-Obtiene información de un módulo.
-
-
-
-PUT /api/modules/{module_id}
-
-
-Actualiza un módulo.
-
-
-
-DELETE /api/modules/{module_id}
-
-
-Elimina un módulo.
-
-
----
-
-### Estadísticas
-
-
-GET /api/stats
-
-
-Devuelve métricas generales:
-
-- Total de auditorías.
-- Auditorías completadas.
-- Auditorías pendientes.
-- Módulos activos.
-
-
----
-
-# 3. Base de datos
-
-Estado:
-
-Funcionando.
-
-
-Tablas actuales:
-
-## audits
+audits
 
 Almacena:
 
-- Identificador de auditoría.
-- Sitio analizado.
-- Keyword.
-- Estado.
-- Resultados.
-- Fechas de ejecución.
-
-
-## modules
+identificador interno;
+audit_id;
+sitio web;
+keyword;
+estado;
+resultados;
+errores;
+fechas;
+tiempo de ejecución.
+modules
 
 Almacena:
 
-- Nombre del módulo.
-- URL del servicio.
-- Descripción.
-- Estado activo.
-- Prioridad.
-- Tiempo máximo de ejecución.
+nombre;
+URL;
+descripción;
+estado activo;
+prioridad;
+timeout;
+fechas de creación y actualización.
 
+Los resultados de cada servicio pueden almacenarse como JSON.
 
----
+8. SEO Content
 
-# 4. Servicios SEO
+Estado:
 
-Los servicios tienen creada la estructura inicial de microservicios.
+Funcional
 
-Estado actual:
+Actualmente procesa contenido real obtenido desde una URL o contenido suministrado.
 
-| Servicio      | Estado                      |
-|---------------|-----------------------------|
-| seo-onpage    | Estructura creada           |
-| seo-content   | Estructura creada           |
-| seo-technical | Estructura creada           |
-| seo-monitor   | Pendiente de implementación |
-| ai-agent      | Pendiente de implementación |
+Incluye análisis relacionados con:
 
+keyword objetivo;
+estructura de contenido;
+encabezados;
+densidad de keyword;
+legibilidad;
+metadatos;
+score SEO;
+issues;
+recomendaciones.
 
----
+Puerto interno:
 
-# 5. Pendientes principales
+5003
 
-## Implementación de servicios SEO
+Puerto publicado:
 
-Cada servicio debe desarrollar su lógica específica de análisis.
+5103
+9. SEO OnPage
 
+Estado:
 
-Pendientes:
+Funcional
 
-- Recibir solicitudes del API Gateway.
-- Procesar análisis SEO.
-- Generar resultados.
-- Responder mediante API REST.
+Utiliza un analizador propio para revisar elementos SEO internos de una página.
 
+La respuesta contiene:
 
----
+score;
+análisis;
+issues;
+recomendaciones;
+errores.
 
-## Integración completa
+Su dominio incluye elementos como:
 
-Pendiente:
+metadatos;
+títulos;
+encabezados;
+imágenes;
+atributos ALT;
+enlaces;
+optimización On-Page.
 
-- Conectar API Gateway con cada servicio SEO.
-- Procesar resultados combinados.
-- Guardar resultados finales de auditoría.
+Puerto interno:
 
+5004
 
----
+Puerto publicado:
 
-## Mejoras futuras del dashboard
+5104
+10. SEO Technical
 
-Pendiente:
+Estado:
 
-- Mejorar diseño visual.
-- Agregar gráficos avanzados.
-- Agregar filtros de historial.
+Funcional
 
-Estas mejoras no son necesarias para la primera versión funcional.
+Actualmente analiza:
 
----
+HTTPS;
+estado HTTP;
+tiempo de respuesta;
+robots.txt;
+sitemap.xml;
+redirecciones;
+canonical;
+meta robots.
 
-# 6. Objetivo de la siguiente etapa
+La respuesta incluye:
 
-La siguiente etapa del proyecto consiste en implementar los servicios SEO individuales manteniendo la arquitectura definida.
+score;
+análisis técnico;
+issues;
+recomendaciones;
+errores.
 
-Cada servicio deberá cumplir con:
+Puerto interno:
 
-- Endpoint REST definido.
-- Entrada y salida documentada.
-- Comunicación con API Gateway.
-- Respuesta compatible con el formato de auditorías.
+5005
+
+Puerto publicado:
+
+5105
+11. SEO Monitor
+
+Estado:
+
+Funcional
+
+El servicio analiza el estado operativo del sitio.
+
+Actualmente evalúa:
+
+disponibilidad;
+tiempo de respuesta;
+redirecciones;
+código HTTP;
+tipo de contenido;
+tamaño de respuesta;
+servidor;
+certificado SSL.
+
+También genera:
+
+score;
+issues;
+recomendaciones;
+errores.
+
+Puerto interno:
+
+5006
+
+Puerto publicado:
+
+5106
+12. Docker
+
+La plataforma utiliza Docker Compose para ejecutar:
+
+seo-dashboard
+seo-api-gateway
+seo-content-service
+seo-onpage-service
+seo-technical-service
+seo-monitor-service
+
+Los servicios utilizan la red externa:
+
+seo-network
+13. Flujo actual de una auditoría
+Usuario
+  |
+  v
+Dashboard
+  |
+  v
+POST /api/audit
+  |
+  v
+API Gateway
+  |
+  +--> registra auditoría
+  |
+  +--> obtiene módulos activos
+  |
+  +--> filtra módulos seleccionados
+  |
+  +--> ejecuta módulos por prioridad
+  |
+  v
+Resultados consolidados
+  |
+  v
+PostgreSQL
+  |
+  v
+Dashboard
+14. Funcionalidades implementadas
+
+Actualmente main incluye:
+
+arquitectura de microservicios;
+Dashboard React;
+API Gateway FastAPI;
+PostgreSQL;
+Docker Compose;
+Nginx para frontend;
+auditorías sobre sitios reales;
+módulos SEO independientes;
+selección de módulos;
+priorización;
+timeouts;
+historial;
+detalle de auditorías;
+estadísticas;
+gestión de módulos;
+manejo de errores entre servicios;
+consolidación de resultados.
+15. Pendientes y evolución futura
+
+Las principales oportunidades de mejora son:
+
+ampliar cobertura de pruebas;
+ejecutar microservicios en paralelo;
+mejorar visualización histórica;
+agregar comparación entre auditorías;
+incorporar autenticación y usuarios;
+agregar auditorías programadas;
+integrar nuevas fuentes externas de métricas;
+ampliar reportes y exportaciones;
+mejorar observabilidad de servicios;
+preparar despliegue de producción.
+16. Objetivo de evolución
+
+La siguiente etapa ya no consiste en crear la arquitectura base, sino en ampliar capacidades sobre una plataforma funcional.
+
+El foco puede orientarse a:
+
+aumentar profundidad de análisis;
+mejorar experiencia de usuario;
+ampliar automatización;
+incorporar nuevas fuentes de datos;
+optimizar rendimiento;
+fortalecer pruebas e infraestructura.
